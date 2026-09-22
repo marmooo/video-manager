@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head prefix="og: http://ogp.me/ns#">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Browse local video folders right in your browser and preview each file as a 10-thumbnail grid before playing — a fast, install-free video manager. Supports drag-and-drop, paste, M3U playlists, favorites (stars), and continuous playback. Everything runs locally in your own browser.">
+    <title>Video Manager - Browse folders, preview 10-thumbnail grids, play.</title>
+    <meta property="og:title" content="Video Manager">
+    <meta property="og:site_name" content="Video Manager">
+    <meta property="og:description" content="Video Manager - Browse folders, preview 10-thumbnail grids, play.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://marmooo.github.io/video-manager/">
+    <meta property="og:image" content="https://marmooo.github.io/video-manager/favicon/apple-touch-icon.png">
+    <meta name="twitter:card" content="summary">
+    <script>
+      (function() {
+        const saved = localStorage.getItem("darkMode");
+        const prefersDark = globalThis.matchMedia("(prefers-color-scheme: dark)").matches;
+        const theme = saved || (prefersDark ? "dark" : "light");
+        document.documentElement.setAttribute("data-bs-theme", theme);
+      })();
+    </script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-F2179JXDYY"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-F2179JXDYY');
+    </script>
+    <link rel="icon" type="image/png" href="/video-manager/favicon/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="/video-manager/favicon/favicon.svg">
+    <link rel="apple-touch-icon" sizes="180x180" href="/video-manager/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/video-manager/favicon/site.webmanifest">
+    <link rel="alternate" href="https://marmooo.github.io/video-manager/" hreflang="x-default">
+    <link rel="alternate" href="https://marmooo.github.io/video-manager/ja/" hreflang="ja">
+    <link rel="alternate" href="https://marmooo.github.io/video-manager/en/" hreflang="en">
+    <link class="drop-inline-css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <style>
+      html, body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* ========== Vertical / Horizontal Splitters (no Bootstrap equivalent) ========== */
+      .v-splitter {
+        width: 5px;
+        background: var(--bs-border-color);
+        cursor: col-resize;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+      .v-splitter:hover, .v-splitter.dragging { background: var(--bs-primary); }
+
+      .h-splitter {
+        height: 5px;
+        background: var(--bs-border-color);
+        cursor: row-resize;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+      .h-splitter:hover, .h-splitter.dragging { background: var(--bs-primary); }
+
+      /* ========== Dropzone ========== */
+      .border-dashed { border-style: dashed !important; }
+      #sidebarDropzone.dragover {
+        border-color: var(--bs-primary) !important;
+        background: rgba(var(--bs-primary-rgb), 0.08);
+      }
+
+      /* ========== Thumbnail grid (sized dynamically by JS to fit all 10 at once) ==========
+         Flexbox with wrap, rather than CSS Grid: the grid's own box is sized in JS to
+         exactly `cols` tiles wide, so it wraps at a fixed column count, and
+         justify-content:center centers each (including a partial last) row within that
+         box. The outer wrap then centers the whole block in the available space. */
+      #thumbGridWrap {
+        min-height: 0;
+        min-width: 0;
+      }
+      #thumbGrid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-content: center;
+      }
+      .thumb-cell {
+        position: relative;
+        flex: 0 0 auto;
+        cursor: pointer;
+        overflow: hidden;
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background: #000;
+        transition: border-color 0.1s;
+      }
+      .thumb-cell:hover { border-color: var(--bs-primary); }
+      .thumb-cell.playing { border-color: var(--bs-success); }
+
+      /* Now-playing row in the sidebar (directory listing or M3U playlist) */
+      #fileList .list-group-item.active {
+        font-weight: 600;
+        border-left: 3px solid var(--bs-success);
+      }
+      .thumb-cell img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        pointer-events: none;
+      }
+      .thumb-cell .ph {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #111;
+      }
+      .thumb-cell .t-label {
+        position: absolute;
+        right: 2px;
+        bottom: 2px;
+        font-size: 12px;
+        line-height: 1.4;
+        padding: 0 3px;
+        border-radius: 2px;
+        background: rgba(0,0,0,0.6);
+        color: #ddd;
+        pointer-events: none;
+      }
+
+      /* ========== Drop overlay ========== */
+      #dropOverlay {
+        display: none;
+        z-index: 1050;
+        background: rgba(var(--bs-primary-rgb), 0.15);
+        border: 3px dashed var(--bs-primary);
+        color: var(--bs-primary);
+        font-size: 24px;
+        pointer-events: none;
+      }
+      #dropOverlay.visible { display: flex; }
+
+      /* ========== Toast ========== */
+      #toast { min-width: 260px; max-width: 340px; }
+
+      /* ========== Player ==========
+         width/height:100% + object-fit:contain (not max-width/max-height) so
+         small videos are scaled UP to fill the panel too, not just shrunk when
+         too big — max-width/max-height alone never grows a replaced element
+         past its native size. */
+      #videoEl { width: 100%; height: 100%; object-fit: contain; outline: none; }
+
+      /* ========== Breadcrumb scroll ========== */
+      #breadcrumbBar { overflow-x: auto; white-space: nowrap; }
+      #breadcrumb { flex-wrap: nowrap; }
+
+      /* Dropdown bookmark row */
+      .bookmark-row .dropdown-item { padding-right: 0.25rem; }
+
+      html[data-bs-theme="dark"] .favicon { filter: invert(1) hue-rotate(180deg); }
+    </style>
+    <script data-ad-client="ca-pub-6459713332128733" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  </head>
+  <body>
+    <div class="d-flex flex-column vh-100">
+      <!-- ========== Navbar / Toolbar ========== -->
+      <nav class="navbar navbar-expand bg-body-tertiary border-bottom px-3 py-2 flex-shrink-0">
+        <a class="navbar-brand" href="/video-manager/">
+          <img class="favicon" alt="" src="/video-manager/favicon/favicon.svg" width="32" height="32">
+          Video Manager
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-1">
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle text-truncate" type="button"
+                    id="dirMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" style="max-width:280px;">
+              <span id="currentDirLabel">📂 No directory selected</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" id="dirMenu" style="min-width:280px;">
+              <li><button class="dropdown-item" type="button" id="menuPickDir">📁 Select directory...</button></li>
+              <li><button class="dropdown-item" type="button" id="menuAddBookmark" disabled>⭐ Bookmark current folder</button></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><h6 class="dropdown-header">Bookmarks</h6></li>
+              <li id="bookmarkListEmpty"><span class="dropdown-item-text text-body-secondary small">None yet</span></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><h6 class="dropdown-header">Favorites (M3U)</h6></li>
+              <li><button class="dropdown-item" type="button" id="menuExportStars">⬇️ Export</button></li>
+              <li><button class="dropdown-item" type="button" id="menuImportStars">⬆️ Import</button></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><button class="dropdown-item" type="button" id="menuOpenPlaylist">▶️ Open M3U as playlist</button></li>
+            </ul>
+          </div>
+
+          <div class="navbar-nav align-items-center flex-row gap-1">
+            <select title="language" id="lang" class="form-select form-select-sm">
+              <option value="ja">日本語</option>
+              <option value="en" selected>English</option>
+            </select>
+            <button title="toggle dark-mode" id="toggleDarkMode" class="fs-4 btn p-0" type="button">🌓</button>
+          </div>
+        </div>
+      </nav>
+
+      <input type="file" id="importStarsInput" class="d-none" accept=".m3u,.m3u8,audio/x-mpegurl">
+      <input type="file" id="openPlaylistInput" class="d-none" accept=".m3u,.m3u8,audio/x-mpegurl">
+
+      <div class="d-flex flex-grow-1 overflow-hidden">
+        <!-- ========== Sidebar ========== -->
+        <div class="d-flex flex-column bg-body-tertiary border-end flex-shrink-0" id="sidebar"
+             style="width:280px;max-width:50%;">
+          <nav aria-label="breadcrumb" class="border-bottom px-2 py-2 flex-shrink-0" id="breadcrumbBar">
+            <ol class="breadcrumb mb-0 small" id="breadcrumb">
+              <li class="breadcrumb-item text-body-secondary">No directory selected</li>
+            </ol>
+          </nav>
+          <div class="overflow-auto flex-grow-1 d-flex flex-column" id="fileList"></div>
+        </div>
+
+        <div class="v-splitter" id="vSplitter"></div>
+
+        <!-- ========== Right Pane ========== -->
+        <div class="d-flex flex-column flex-grow-1 overflow-hidden" id="rightPane" style="min-width:0;">
+          <div class="flex-shrink-0 overflow-auto p-2 d-flex flex-column" id="contentArea" style="height:150px;">
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-body-secondary text-center" id="contentEmpty">
+              <div style="font-size:32px;">📁</div>
+              <div>Click a video file in the sidebar to see<br>a 10-thumbnail preview grid</div>
+            </div>
+          </div>
+
+          <div class="h-splitter" id="hSplitter"></div>
+
+          <div class="bg-body-secondary border-top d-flex flex-column flex-grow-1" id="playerArea">
+            <div class="flex-grow-1 d-flex align-items-center justify-content-center position-relative" id="playerWrap" style="min-height:0;">
+              <div class="text-center p-3" id="playerEmpty">
+                <div>Click a thumbnail to play</div>
+
+                <!-- Linked tools: other single-file apps that work well with
+                     this one. Add more <a> rows to #toolLinksList as they come
+                     up — same structure (emoji + name — one-line pitch). -->
+                <footer class="pt-4 alert text-center mb-0">
+                  <div class="mb-1">🔗 Related tools</div>
+                  <div class="d-flex flex-column gap-1 text-start" id="toolLinksList">
+                    <a href="https://marmooo.github.io/petapeta/" target="_blank" rel="noopener" class="text-decoration-none">
+                      <img class="favicon" alt="" src="https://marmooo.github.io/petapeta/favicon/favicon.svg" width="16" height="16">
+                      Petapeta — drag a thumbnail here to open it in a multi-video/image viewer
+                    </a>
+                  </div>
+                  <div class="pt-3">
+                    <a class="px-1" href="/">Home</a>
+                    <a class="px-1" href="/terms/">Terms</a>
+                    <a class="px-1" href="https://github.com/marmooo/video-manager">Contact</a>
+                  </div>
+                  <div class="text-muted">&copy; <a href="https://github.com/marmooo">marmooo</a></div>
+                </footer>
+              </div>
+              <video id="videoEl" controls style="display:none;"></video>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center" id="dropOverlay">
+      Drop a video to play
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100;">
+      <div class="toast align-items-center" id="toast" role="status" aria-live="polite">
+        <div class="toast-body">
+          <div id="toastText">Processing...</div>
+          <div class="progress mt-2" style="height:4px;">
+            <div class="progress-bar" id="toastProgress" style="width:0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A dropped/pasted .m3u file is ambiguous on its own — could mean "open
+         this as a browsable playlist" or "import these as bookmarks" — so we
+         ask which one was meant instead of guessing. -->
+    <div class="modal fade" id="m3uChoiceModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h6 class="modal-title mb-0" id="m3uChoiceFileName">stars.m3u</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body small text-body-secondary">
+            How would you like to load this M3U?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="m3uChoicePlaylistBtn">▶️ Open as playlist</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="m3uChoiceBookmarkBtn">⭐ Import as bookmarks</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Templates for sidebar states index.js clones in, so their text stays
+         in this HTML file (per-language) rather than hardcoded in index.js. -->
+    <template id="tpl-sidebar-empty">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 m-3 border border-2 border-dashed rounded flex-grow-1" id="sidebarDropzone">
+        <div style="font-size:32px;">📂</div>
+        <div class="text-body-secondary">Drop a video folder here<br>or pick one below</div>
+        <button type="button" class="btn btn-primary btn-sm my-2" id="btnPickDir">Select directory</button>
+        <div class="text-body-secondary">The same folder opens automatically next time</div>
+      </div>
+    </template>
+    <template id="tpl-needs-permission">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 m-3 border border-2 border-dashed rounded flex-grow-1">
+        <div style="font-size:32px;">🔒</div>
+        <div class="text-body-secondary small" id="needsPermissionText"></div>
+        <button type="button" class="btn btn-primary btn-sm my-2" id="btnReauthorize">Grant access</button>
+        <button type="button" class="btn btn-link btn-sm" id="btnPickInstead">Choose another folder</button>
+      </div>
+    </template>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      window.MESSAGES = {
+        bookmarkAdded: "Added to bookmarks",
+        bookmarkAlreadyExists: "Already bookmarked",
+        bookmarkPermissionDenied: "No permission for this bookmark. Please select it again.",
+        close: "Close",
+        deleteBookmark: "Delete bookmark",
+        directoryLabel: "Directory",
+        directoryPickFailed: "Failed to pick directory: {msg}",
+        emptyFolder: "This folder is empty",
+        errorPrefix: "Error: {msg}",
+        favorite: "Favorite",
+        folderPermissionNeeded: "Access permission is needed for this folder",
+        fromAnotherTab: "From another tab: {name} (open the same file in this tab)",
+        fsaNotSupported: "This browser doesn't support the File System Access API (Chrome / Edge recommended)",
+        generatingThumbnails: "Generating thumbnails...",
+        generatingThumbnailsFallback: "Generating thumbnails... (compatibility mode)",
+        generatingThumbnailsFallbackCors: "Generating thumbnails... (compatibility mode / requires CORS)",
+        jpegConversionFailed: "JPEG conversion failed",
+        localFileNotFoundSkip: "Local file not found: {path} (skipping to next)",
+        m3uEmpty: "This M3U has no entries",
+        noDirectorySelected: "No directory selected",
+        noStars: "No stars yet",
+        noVideoTrack: "No video track found",
+        notAVideoFile: "Not a video file",
+        permissionDenied: "Permission was not granted",
+        permissionNeededPrompt: "Access to the previous folder \u201c{name}\u201d<br>needs to be granted again",
+        playbackError: "Playback error: {msg}",
+        readError: "Read error: {msg}",
+        starsImportedCount: "Added {count} to stars",
+        starsImportedNone: "Nothing new to add",
+        statusError: "Error",
+        statusGenerating: "Generating...",
+        unsupportedBrowser: "Unsupported browser",
+        unsupportedCanvasFormat: "Unsupported canvas format"
+      };
+    </script>
+    <script type="module" src="/video-manager/index.js"></script>
+    <div class="drop-inline-css
+      badge badge text-bg-secondary fw-normal
+      list-group listgroup-item
+      dropdown-toggle show
+      dropdown-menu show dropdown-item
+      toast showing
+      d-none">
+    </div>
+  </body>
+</html>
