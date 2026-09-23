@@ -1354,7 +1354,7 @@ function generateThumbnailsFromUrlViaVideoElement(
   return Promise.all(timestamps.map((t, idx) => captureOne(t, idx)));
 }
 
-async function canvasToJpeg(canvas, quality) {
+function canvasToJpeg(canvas, quality) {
   if (canvas instanceof HTMLCanvasElement) {
     return new Promise((resolve, reject) => {
       canvas.toBlob(
@@ -1832,7 +1832,7 @@ globalThis.addEventListener("drop", async (e) => {
       }
       showToast(t("fromAnotherTab", { name: info.name }));
       setTimeout(hideToast, 3000);
-    } catch (_) {}
+    } catch (_) { /* skip */ }
   }
 });
 
@@ -1866,7 +1866,7 @@ function playDroppedFile(file) {
   // not just files opened via the sidebar's directory browser. Wrap the
   // File in a minimal FileSystemFileHandle-like object so it can go
   // through the exact same generation path.
-  const pseudoHandle = { name: file.name, getFile: async () => file };
+  const pseudoHandle = { name: file.name, getFile: () => file };
   playLocalHandleImmediately(pseudoHandle, file.name, `(dropped)/${file.name}`);
 }
 
