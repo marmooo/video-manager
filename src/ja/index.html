@@ -162,15 +162,15 @@
     </style>
     <script data-ad-client="ca-pub-6459713332128733" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   </head>
-  <body>
-    <div class="d-flex flex-column vh-100">
+  <body class="d-flex flex-column vh-100">
+    <header>
       <!-- ========== Navbar / Toolbar ========== -->
-      <nav class="navbar navbar-expand bg-body-tertiary border-bottom px-3 py-2 flex-shrink-0">
+      <nav class="navbar navbar-expand bg-body-tertiary border-bottom px-3">
         <a class="navbar-brand" href="/video-manager/">
           <img class="favicon" alt="" src="/video-manager/favicon/favicon.svg" width="32" height="32">
           サムネで動画管理くん
         </a>
-        <div class="ms-auto d-flex align-items-center gap-1">
+        <div class="navbar-nav ms-auto align-items-center gap-1">
           <div class="dropdown">
             <button class="btn btn-outline-secondary btn-sm dropdown-toggle text-truncate" type="button"
                     id="dirMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" style="max-width:280px;">
@@ -190,17 +190,16 @@
               <li><button class="dropdown-item" type="button" id="menuOpenPlaylist">▶️ M3Uをプレイリストとして開く</button></li>
             </ul>
           </div>
-
-          <div class="navbar-nav align-items-center flex-row gap-1">
-            <select title="言語" id="lang" class="form-select form-select-sm">
-              <option value="ja" selected>日本語</option>
-              <option value="en">English</option>
-            </select>
-            <button title="ダークモード切替" id="toggleDarkMode" class="fs-4 btn p-0" type="button">🌓</button>
-          </div>
+          <select title="言語" id="lang" class="form-select form-select-sm">
+            <option value="ja" selected>日本語</option>
+            <option value="en">English</option>
+          </select>
+          <button title="ダークモード切替" id="toggleDarkMode" class="fs-4 btn p-0" type="button">🌓</button>
         </div>
       </nav>
+    </header>
 
+    <main class="d-flex flex-column flex-grow-1 overflow-hidden">
       <input type="file" id="importStarsInput" class="d-none" accept=".m3u,.m3u8,audio/x-mpegurl">
       <input type="file" id="openPlaylistInput" class="d-none" accept=".m3u,.m3u8,audio/x-mpegurl">
 
@@ -258,43 +257,43 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center" id="dropOverlay">
-      動画をドロップして再生
-    </div>
+      <div class="position-fixed top-0 start-0 w-100 h-100 align-items-center justify-content-center" id="dropOverlay">
+        動画をドロップして再生
+      </div>
 
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100;">
-      <div class="toast align-items-center" id="toast" role="status" aria-live="polite">
-        <div class="toast-body">
-          <div id="toastText">処理中...</div>
-          <div class="progress mt-2" style="height:4px;">
-            <div class="progress-bar" id="toastProgress" style="width:0%;"></div>
+      <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1100;">
+        <div class="toast align-items-center" id="toast" role="status" aria-live="polite">
+          <div class="toast-body">
+            <div id="toastText">処理中...</div>
+            <div class="progress mt-2" style="height:4px;">
+              <div class="progress-bar" id="toastProgress" style="width:0%;"></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- A dropped/pasted .m3u file is ambiguous on its own — could mean "open
-         this as a browsable playlist" or "import these as bookmarks" — so we
-         ask which one was meant instead of guessing. -->
-    <div class="modal fade" id="m3uChoiceModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h6 class="modal-title mb-0" id="m3uChoiceFileName">stars.m3u</h6>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body small text-body-secondary">
-            このM3Uをどちらとして読み込みますか？
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="m3uChoicePlaylistBtn">▶️ プレイリストとして開く</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="m3uChoiceBookmarkBtn">⭐ ブックマークにインポート</button>
+      <!-- A dropped/pasted .m3u file is ambiguous on its own — could mean "open
+           this as a browsable playlist" or "import these as bookmarks" — so we
+           ask which one was meant instead of guessing. -->
+      <div class="modal fade" id="m3uChoiceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h6 class="modal-title mb-0" id="m3uChoiceFileName">stars.m3u</h6>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body small text-body-secondary">
+              このM3Uをどちらとして読み込みますか？
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="m3uChoicePlaylistBtn">▶️ プレイリストとして開く</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="m3uChoiceBookmarkBtn">⭐ ブックマークにインポート</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
     <!-- Templates for sidebar states index.js clones in, so their text stays
          in this HTML file (per-language) rather than hardcoded in index.js. -->
