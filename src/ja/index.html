@@ -145,11 +145,17 @@
       #toast { min-width: 260px; max-width: 340px; }
 
       /* ========== Player ==========
+         position:absolute + inset:0 takes the video out of the flow: inside
+         #playerWrap (a flexed box) a plain height:100% falls back to `auto`
+         (= width x intrinsic ratio), so the element grows taller than the
+         panel and the native controls — drawn on the element's bottom edge —
+         land outside the overflow:hidden clipping and never show. Absolutely
+         positioned, the 100% resolve against #playerWrap itself.
          width/height:100% + object-fit:contain (not max-width/max-height) so
          small videos are scaled UP to fill the panel too, not just shrunk when
          too big — max-width/max-height alone never grows a replaced element
          past its native size. */
-      #videoEl { width: 100%; height: 100%; object-fit: contain; outline: none; }
+      #videoEl { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; outline: none; }
 
       /* ========== Breadcrumb scroll ========== */
       #breadcrumbBar { overflow-x: auto; white-space: nowrap; }
