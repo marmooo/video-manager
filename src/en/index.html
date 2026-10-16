@@ -162,44 +162,44 @@
     </style>
     <script data-ad-client="ca-pub-6459713332128733" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
   </head>
-  <body class="d-flex flex-column vh-100 p-0">
-    <header>
-      <!-- ========== Navbar / Toolbar ========== -->
-      <nav class="navbar navbar-expand bg-body-tertiary border-bottom px-3">
-        <a class="navbar-brand" href="/video-manager/">
-          <img class="favicon" alt="" src="/video-manager/favicon/favicon.svg" width="32" height="32">
-          Video Manager
-        </a>
-        <div class="navbar-nav ms-auto align-items-center gap-1">
-          <div class="dropdown">
-            <button class="btn btn-outline-secondary btn-sm dropdown-toggle text-truncate" type="button"
-                    id="dirMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" style="max-width:280px;">
-              <span id="currentDirLabel">📂 No directory selected</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end" id="dirMenu" style="min-width:280px;" data-bs-popper>
-              <li><button class="dropdown-item" type="button" id="menuPickDir">📁 Select directory...</button></li>
-              <li><button class="dropdown-item" type="button" id="menuAddBookmark" disabled>⭐ Bookmark current folder</button></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><h6 class="dropdown-header">Bookmarks</h6></li>
-              <li id="bookmarkListEmpty"><span class="dropdown-item-text text-body-secondary small">None yet</span></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><h6 class="dropdown-header">Favorites (M3U)</h6></li>
-              <li><button class="dropdown-item" type="button" id="menuExportStars">⬇️ Export</button></li>
-              <li><button class="dropdown-item" type="button" id="menuImportStars">⬆️ Import</button></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><button class="dropdown-item" type="button" id="menuOpenPlaylist">▶️ Open M3U as playlist</button></li>
-            </ul>
+  <body class="vh-100">
+    <main class="d-flex flex-column h-100 overflow-hidden">
+      <header>
+        <!-- ========== Navbar / Toolbar ========== -->
+        <nav class="navbar navbar-expand bg-body-tertiary border-bottom px-3">
+          <a class="navbar-brand" href="/video-manager/">
+            <img class="favicon" alt="" src="/video-manager/favicon/favicon.svg" width="32" height="32">
+            Video Manager
+          </a>
+          <div class="navbar-nav ms-auto align-items-center gap-1">
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary btn-sm dropdown-toggle text-truncate" type="button"
+                      id="dirMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" style="max-width:280px;">
+                <span id="currentDirLabel">📂 No directory selected</span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" id="dirMenu" style="min-width:280px;" data-bs-popper>
+                <li><button class="dropdown-item" type="button" id="menuPickDir">📁 Select directory...</button></li>
+                <li><button class="dropdown-item" type="button" id="menuAddBookmark" disabled>⭐ Bookmark current folder</button></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Bookmarks</h6></li>
+                <li id="bookmarkListEmpty"><span class="dropdown-item-text text-body-secondary small">None yet</span></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Favorites (M3U)</h6></li>
+                <li><button class="dropdown-item" type="button" id="menuExportStars">⬇️ Export</button></li>
+                <li><button class="dropdown-item" type="button" id="menuImportStars">⬆️ Import</button></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><button class="dropdown-item" type="button" id="menuOpenPlaylist">▶️ Open M3U as playlist</button></li>
+              </ul>
+            </div>
+            <select title="language" id="lang" class="form-select form-select-sm">
+              <option value="ja">日本語</option>
+              <option value="en" selected>English</option>
+            </select>
+            <button title="toggle dark-mode" id="toggleDarkMode" class="fs-4 btn p-0" type="button">🌓</button>
           </div>
-          <select title="language" id="lang" class="form-select form-select-sm">
-            <option value="ja">日本語</option>
-            <option value="en" selected>English</option>
-          </select>
-          <button title="toggle dark-mode" id="toggleDarkMode" class="fs-4 btn p-0" type="button">🌓</button>
-        </div>
-      </nav>
-    </header>
+        </nav>
+      </header>
 
-    <main class="d-flex flex-column flex-grow-1 overflow-hidden">
       <noscript>
         <div class="alert alert-warning">Please enable JavaScript.</div>
       </noscript>
