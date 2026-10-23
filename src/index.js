@@ -4,7 +4,7 @@ import {
   CanvasSink,
   Input,
   UrlSource,
-} from "https://cdn.jsdelivr.net/npm/mediabunny@1.58.0/+esm";
+} from "https://cdn.jsdelivr.net/npm/mediabunny@1.62.0/+esm";
 
 // ========== i18n ==========
 // All user-facing text lives in each language's own HTML file (as
